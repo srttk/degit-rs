@@ -1,10 +1,10 @@
-use std::fs::{self, File};
-use std::io::Write;
-use std::path::PathBuf;
+use crate::parse::Repo;
 use directories::ProjectDirs;
 use reqwest::blocking::Client;
 use reqwest::header::USER_AGENT;
-use crate::parse::Repo;
+use std::fs::{self, File};
+use std::io::Write;
+use std::path::PathBuf;
 
 pub struct Fetcher {
     client: Client,
@@ -13,8 +13,8 @@ pub struct Fetcher {
 
 impl Fetcher {
     pub fn new() -> Self {
-        let cache_dir = ProjectDirs::from("com", "degit-rs", "degit")
-            .map(|d| d.cache_dir().to_path_buf());
+        let cache_dir =
+            ProjectDirs::from("com", "degit-rs", "degit").map(|d| d.cache_dir().to_path_buf());
 
         Self {
             client: Client::new(),
@@ -37,8 +37,13 @@ impl Fetcher {
 
     pub fn fetch(&self, repo: &Repo, use_cache: bool, verbose: bool) -> Result<PathBuf, String> {
         let url = repo.download_url();
-        let cache_key = format!("{}-{}-{}.tar.gz", repo.provider_name(), repo.user, repo.name);
-        
+        let cache_key = format!(
+            "{}-{}-{}.tar.gz",
+            repo.provider_name(),
+            repo.user,
+            repo.name
+        );
+
         let mut target_path = None;
         if let Some(dir) = &self.cache_dir {
             if !dir.exists() {
@@ -60,21 +65,31 @@ impl Fetcher {
             println!("Downloading {} ...", url);
         }
 
-        let resp = self.client
+        let resp = self
+            .client
             .get(&url)
-            .header(USER_AGENT, "degit-rs (https://github.com/Rich-Harris/degit)")
+            .header(
+                USER_AGENT,
+                "degit-rs (https://github.com/Rich-Harris/degit)",
+            )
             .send()
             .map_err(|e| format!("Failed to download {}: {}", url, e))?;
 
         if !resp.status().is_success() {
-            return Err(format!("Could not download {}: status {}", url, resp.status()));
+            return Err(format!(
+                "Could not download {}: status {}",
+                url,
+                resp.status()
+            ));
         }
 
         let bytes = resp.bytes().map_err(|e| e.to_string())?;
 
         if let Some(path) = &target_path {
-            let mut file = File::create(path).map_err(|e| format!("Could not create cache file: {}", e))?;
-            file.write_all(&bytes).map_err(|e| format!("Could not write cache file: {}", e))?;
+            let mut file =
+                File::create(path).map_err(|e| format!("Could not create cache file: {}", e))?;
+            file.write_all(&bytes)
+                .map_err(|e| format!("Could not write cache file: {}", e))?;
             Ok(path.clone())
         } else {
             let temp_path = PathBuf::from(&cache_key);

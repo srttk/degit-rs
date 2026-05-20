@@ -30,23 +30,23 @@ degit <source> <destination>
 
 ### Examples
 
-Download the default branch of `Rich-Harris/degit` into a folder named `my-project`:
+Download the default branch of `srttk/degit-rs` into a folder named `my-project`:
 
 ```bash
-degit Rich-Harris/degit my-project
+degit srttk/degit-rs my-project
 ```
 
 Target a specific branch, tag, or commit using the `#` symbol:
 
 ```bash
 # Target a branch
-degit Rich-Harris/degit#dev my-project
+degit srttk/degit-rs#dev my-project
 
 # Target a release tag
-degit Rich-Harris/degit#v1.0.0 my-project
+degit srttk/degit-rs#v1.0.0 my-project
 
 # Target a commit hash
-degit Rich-Harris/degit#a1b2c3d my-project
+degit srttk/degit-rs#a1b2c3d my-project
 ```
 
 Use a different provider (GitHub is the default):

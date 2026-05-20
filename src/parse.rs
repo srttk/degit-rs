@@ -26,7 +26,7 @@ impl Repo {
 
     pub fn parse(src: &str) -> Result<Repo, String> {
         let re = Regex::new(r"^(?:(?P<provider>github|gitlab|bitbucket):)?(?P<user>[^/]+)/(?P<repo>[^#]+)(?:#(?P<ref>.+))?$").map_err(|e| e.to_string())?;
-        
+
         if let Some(caps) = re.captures(src) {
             let provider = match caps.name("provider").map(|m| m.as_str()) {
                 Some("gitlab") => Provider::GitLab,
@@ -34,13 +34,14 @@ impl Repo {
                 _ => Provider::GitHub,
             };
             let user = caps.name("user").unwrap().as_str().to_string();
-            
+
             let mut repo_name = caps.name("repo").unwrap().as_str().to_string();
             if repo_name.ends_with(".git") {
                 repo_name = repo_name.trim_end_matches(".git").to_string();
             }
 
-            let refer = caps.name("ref")
+            let refer = caps
+                .name("ref")
                 .map(|m| m.as_str().to_string())
                 .unwrap_or_else(|| "HEAD".to_string());
 

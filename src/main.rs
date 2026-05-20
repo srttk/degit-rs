@@ -1,11 +1,11 @@
-mod parse;
-mod fetch;
 mod extract;
+mod fetch;
 mod git;
+mod parse;
 
 use clap::{Parser, ValueEnum};
-use parse::Repo;
 use fetch::Fetcher;
+use parse::Repo;
 use std::path::Path;
 
 #[derive(Clone, Debug, ValueEnum, PartialEq)]
@@ -48,7 +48,7 @@ pub struct Args {
 
 fn main() {
     let args = Args::parse();
-    
+
     let fetcher = Fetcher::new();
 
     if args.clear_cache {
@@ -62,7 +62,7 @@ fn main() {
             return;
         }
     }
-    
+
     if args.src.is_none() {
         eprintln!("Error: missing source repository.");
         std::process::exit(1);
@@ -79,7 +79,7 @@ fn main() {
                 if args.verbose {
                     println!("Successfully cloned and setup repository.");
                 }
-            },
+            }
             Err(e) => {
                 eprintln!("Error parsing source: {}", e);
                 std::process::exit(1);
@@ -108,13 +108,13 @@ fn main() {
                     if args.verbose {
                         println!("Successfully downloaded and extracted.");
                     }
-                },
+                }
                 Err(e) => {
                     eprintln!("Error fetching tarball: {}", e);
                     std::process::exit(1);
                 }
             }
-        },
+        }
         Err(e) => {
             eprintln!("Error parsing source: {}", e);
             std::process::exit(1);
@@ -138,7 +138,16 @@ mod tests {
 
     #[test]
     fn test_cli_args_full() {
-        let args = Args::try_parse_from(&["degit", "user/repo", "my-dir", "--force", "--cache", "--mode", "git"]).unwrap();
+        let args = Args::try_parse_from(&[
+            "degit",
+            "user/repo",
+            "my-dir",
+            "--force",
+            "--cache",
+            "--mode",
+            "git",
+        ])
+        .unwrap();
         assert_eq!(args.src, Some("user/repo".to_string()));
         assert_eq!(args.dest, "my-dir");
         assert_eq!(args.force, true);

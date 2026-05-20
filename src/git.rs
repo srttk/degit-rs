@@ -1,5 +1,5 @@
+use crate::parse::{Provider, Repo};
 use std::process::Command;
-use crate::parse::{Repo, Provider};
 
 pub fn git_url(repo: &Repo) -> String {
     match repo.provider {
@@ -15,7 +15,7 @@ pub fn clone(repo: &Repo, dest: &str, verbose: bool) -> Result<(), String> {
     if verbose {
         println!("Cloning {} into {}", url, dest);
     }
-    
+
     let mut args_clone = vec!["clone", &url, dest];
     if !verbose {
         args_clone.push("--quiet");
@@ -25,7 +25,7 @@ pub fn clone(repo: &Repo, dest: &str, verbose: bool) -> Result<(), String> {
         .args(&args_clone)
         .status()
         .map_err(|e| format!("Failed to spawn git: {}", e))?;
-        
+
     if !status.success() {
         return Err(format!("git clone failed with status {:?}", status.code()));
     }
@@ -40,7 +40,7 @@ pub fn clone(repo: &Repo, dest: &str, verbose: bool) -> Result<(), String> {
             .args(&["checkout", &repo.refer])
             .status()
             .map_err(|e| format!("Failed to spawn git checkout: {}", e))?;
-            
+
         if !checkout_status.success() {
             return Err("git checkout failed".to_string());
         }
