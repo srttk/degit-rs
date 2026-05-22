@@ -2,6 +2,7 @@ mod extract;
 mod fetch;
 mod git;
 mod parse;
+use dialoguer::Input;
 
 use clap::{Parser, ValueEnum};
 use fetch::Fetcher;
@@ -22,8 +23,7 @@ pub struct Args {
     pub src: Option<String>,
 
     /// The destination directory
-    #[arg(default_value = ".")]
-    pub dest: String,
+    pub dest: Option<String>,
 
     /// Force overwrite existing files
     #[arg(short, long)]
@@ -47,7 +47,7 @@ pub struct Args {
 }
 
 fn main() {
-    let args = Args::parse();
+    let mut args = Args::parse();
 
     let fetcher = Fetcher::new();
 
@@ -69,10 +69,20 @@ fn main() {
     }
     let src = args.src.unwrap();
 
+    if args.dest.is_none() {
+        let dest: String = Input::new()
+            .with_prompt("Destination directory")
+            .default(".".into())
+            .interact_text()
+            .unwrap_or_else(|_| ".".into());
+        args.dest = Some(dest);
+    }
+    let dest = args.dest.as_ref().unwrap();
+
     if args.mode == Mode::Git {
         match Repo::parse(&src) {
             Ok(repo) => {
-                if let Err(e) = git::clone(&repo, &args.dest, args.verbose) {
+                if let Err(e) = git::clone(&repo, dest, args.verbose) {
                     eprintln!("Error during git clone: {}", e);
                     std::process::exit(1);
                 }
@@ -97,7 +107,7 @@ fn main() {
 
             match fetcher.fetch(&repo, args.cache, args.verbose) {
                 Ok(tarball_path) => {
-                    let dest_path = Path::new(&args.dest);
+                    let dest_path = Path::new(dest);
                     if args.verbose {
                         println!("Extracting {:?} to {:?}", tarball_path, dest_path);
                     }
@@ -131,7 +141,7 @@ mod tests {
     fn test_cli_args_default() {
         let args = Args::try_parse_from(&["degit", "user/repo"]).unwrap();
         assert_eq!(args.src, Some("user/repo".to_string()));
-        assert_eq!(args.dest, ".");
+        assert_eq!(args.dest, None);
         assert_eq!(args.cache, false);
         assert_eq!(args.mode, Mode::Tar);
     }
@@ -149,7 +159,7 @@ mod tests {
         ])
         .unwrap();
         assert_eq!(args.src, Some("user/repo".to_string()));
-        assert_eq!(args.dest, "my-dir");
+        assert_eq!(args.dest, Some("my-dir".to_string()));
         assert_eq!(args.force, true);
         assert_eq!(args.cache, true);
         assert_eq!(args.mode, Mode::Git);
