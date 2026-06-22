@@ -2,12 +2,12 @@ mod extract;
 mod fetch;
 mod git;
 mod parse;
-use dialoguer::Input;
+use cliclack::{input, log, outro};
 
 use clap::{Parser, ValueEnum};
 use fetch::Fetcher;
 use parse::Repo;
-use std::path::Path;
+use std::{fmt::Display, path::Path};
 
 #[derive(Clone, Debug, ValueEnum, PartialEq)]
 pub enum Mode {
@@ -16,7 +16,7 @@ pub enum Mode {
 }
 
 #[derive(Parser, Debug)]
-#[command(name = "degit", about = "degit in rust", version)]
+#[command(name = "degit", abbout = "degit in rust", version)]
 pub struct Args {
     /// The source repository
     #[arg(required_unless_present = "clear_cache")]
@@ -46,6 +46,18 @@ pub struct Args {
     pub mode: Mode,
 }
 
+fn log_info(msg: impl Display) {
+    log::info(msg).unwrap();
+}
+#[allow(unused)]
+fn log_success(msg: impl Display) {
+    log::success(msg).unwrap();
+}
+
+fn log_ok(msg: impl Display) {
+    outro(msg).unwrap();
+}
+
 fn main() {
     let mut args = Args::parse();
 
@@ -57,6 +69,8 @@ fn main() {
             std::process::exit(1);
         } else if args.verbose {
             println!("Cache cleared.");
+        } else {
+            log_ok("Cache cleared.");
         }
         if args.src.is_none() {
             return;
@@ -69,12 +83,14 @@ fn main() {
     }
     let src = args.src.unwrap();
 
+    println!("SRC: {}", src);
+
     if args.dest.is_none() {
-        let dest: String = Input::new()
-            .with_prompt("Destination directory")
-            .default(".".into())
-            .interact_text()
-            .unwrap_or_else(|_| ".".into());
+        let dest: String = input("Destination directory")
+            .placeholder("my-app - Default '.'")
+            .default_input(".")
+            .interact()
+            .unwrap_or(String::from("."));
         args.dest = Some(dest);
     }
     let dest = args.dest.as_ref().unwrap();
@@ -86,9 +102,8 @@ fn main() {
                     eprintln!("Error during git clone: {}", e);
                     std::process::exit(1);
                 }
-                if args.verbose {
-                    println!("Successfully cloned and setup repository.");
-                }
+
+                log_ok("Successfully cloned and setup repository.");
             }
             Err(e) => {
                 eprintln!("Error parsing source: {}", e);
@@ -103,6 +118,13 @@ fn main() {
             if args.verbose {
                 println!("Parsed repo: {:?}", repo);
                 println!("Download URL: {}", repo.download_url());
+            } else {
+                log_info(format!(
+                    "Download : {}:{}/{}",
+                    repo.provider_name(),
+                    repo.user,
+                    repo.name
+                ));
             }
 
             match fetcher.fetch(&repo, args.cache, args.verbose) {
@@ -117,6 +139,8 @@ fn main() {
                     }
                     if args.verbose {
                         println!("Successfully downloaded and extracted.");
+                    } else {
+                        log_ok("Successfully downloaded and extracted.");
                     }
                 }
                 Err(e) => {

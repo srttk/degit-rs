@@ -21,7 +21,7 @@ impl Fetcher {
             cache_dir,
         }
     }
-
+    #[allow(unused)]
     pub fn get_cache_dir(&self) -> Option<&PathBuf> {
         self.cache_dir.as_ref()
     }

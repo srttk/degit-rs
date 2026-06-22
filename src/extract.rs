@@ -1,6 +1,6 @@
 use flate2::read::GzDecoder;
 use std::fs::File;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use tar::Archive;
 
 pub fn extract_tarball(tar_path: &Path, dest: &Path, force: bool) -> Result<(), String> {
